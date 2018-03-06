@@ -1,5 +1,6 @@
 # Nginx Image Server
-[![Docker Repository](https://hub.docker.com/r/maiz9088/nginx-image-server/)]
+Docker Repository on hub.docker
+https://hub.docker.com/r/maiz9088/nginx-image-server/
 
 Docker Image for [Nginx](http://nginx.org/) server for image processing with [ngx_small_light](https://github.com/cubicdaiya/ngx_small_light).
 It supports resizing/cropping/formatting (...etc) of images stored in local storages or AWS S3.
