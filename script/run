@@ -27,4 +27,4 @@ docker run \
   -v ${BASE_DIRECTORY}/examples:/var/www/nginx/images/ \
   -e "SERVER_NAME=${SERVER_NAME}" \
   -e "S3_HOST=${S3_HOST}" \
-  nginx-image-server:maiz9088
+  nginx-image-server:latest
