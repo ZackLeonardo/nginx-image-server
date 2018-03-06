@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# Usage: script/run <MODE>
+# Description: run nginx-image-server container
+# Example:
+#   $ script/run-target
+#   $ script/run-target -d
+#
+
+BASE_DIRECTORY=`pwd`
+MODE="--rm -it"
+
+if [ $# -eq 1 ]; then
+  if [ $1 = "-d" ]; then
+    MODE="-d"
+  fi
+fi
+
+cd ${BASE_DIRECTORY}
+docker kill target > /dev/null 2>&1 || true
+docker rm   target > /dev/null 2>&1 || true
+docker run \
+  ${MODE} \
+  --name nginx-image-server \
+  -p 80:80 \
+  -p 8090:8090 \
+  -v ${BASE_DIRECTORY}/examples:/var/www/nginx/images/ \
+  -e "SERVER_NAME=${SERVER_NAME}" \
+  -e "S3_HOST=${S3_HOST}" \
+  nginx-image-server:maiz9088

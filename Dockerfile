@@ -22,6 +22,7 @@ RUN apt-get update && \
       wget \
       openssl \
       libssl-dev \
+      libperl-dev \
       libmagickwand-dev \
       imagemagick \
       pkg-config
@@ -66,6 +67,8 @@ RUN cd /tmp/nginx && \
                 --with-compat \
                 --with-file-aio \
                 --with-threads \
+                --with-http_stub_status_module \
+                --with-http_perl_module \
                 --with-http_addition_module \
                 --with-http_auth_request_module \
                 --with-http_dav_module \
@@ -103,8 +106,13 @@ RUN rm -rf /tmp/nginx && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-
+# Add config files
+#
+RUN mkdir -p /usr/share/nginx/perl/lib
+COPY files/nginx.conf   /etc/nginx/nginx.conf
+COPY files/mime.types   /etc/nginx/mime.types
+COPY files/validator.pm /usr/share/nginx/perl/lib/validator.pm
 
 EXPOSE 80 8090
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx"]

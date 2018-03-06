@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# Usage: script/cibuild
+# Description: script to run test
+#
+
+set -e
+
+# this script should be run in project root
+BASE_DIRECTORY=`pwd`
+SERVER_NAME="image.example.com"
+
+echo "==> Building target..."
+cd ${BASE_DIRECTORY}
+script/build
+
+echo "==> Running nginx-image-server..."
+docker kill nginx-image-server > /dev/null 2>&1 || true
+docker rm   nginx-image-server > /dev/null 2>&1 || true
+script/run -d
+
+
+echo "==> Cleaning up..."
+docker kill nginx-image-server > /dev/null 2>&1 || true
+docker rm   nginx-image-server > /dev/null 2>&1 || true
