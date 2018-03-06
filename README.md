@@ -40,6 +40,9 @@ Then you can try image-processing by accessing
 
 for more information,ref to:
 https://github.com/wantedly/nginx-image-server
+http://nginx.org/en/docs/
+https://www.nginx.com/resources/wiki/modules/
+https://www.vultr.com/docs/how-to-compile-nginx-from-source-on-ubuntu-16-04
 
 ## LICENSE
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
