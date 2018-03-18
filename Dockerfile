@@ -1,9 +1,12 @@
 FROM ubuntu:16.04
 
-ENV NGINX_VERSION 1.13.9
+ENV NGX_VERSION 1.13.9
 ENV PCRE_VERSION 8.41
 ENV ZLIB_VERSION 1.2.11
 ENV NGX_SMALL_LIGHT_VERSION 0.9.2
+ENV NGX_UPLOAD_MODULE_VERSION 2.255
+ENV MYSQL_VERSION 5.7
+ENV NODE_VERSION latest
 
 # Install dependency packages
 # NGINX is a program written in C, so we need to install the C compiler (GCC)
@@ -25,12 +28,20 @@ RUN apt-get update && \
       libperl-dev \
       libmagickwand-dev \
       imagemagick \
-      pkg-config
+      pkg-config \
+      unzip \
+      nodejs \
+      npm
+
+RUN ["/bin/bash", "-c", "debconf-set-selections <<< 'mysql-server mysql-server/root_password password 123456'"]
+RUN ["/bin/bash", "-c", "debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password 123456'"]
+RUN apt-get install --no-install-recommends --no-install-suggests -y mysql-server
 
 # Mkdir tmp directories
 #
 RUN mkdir -p /tmp/nginx && \
-    mkdir -p /tmp/ngx_small_light
+    mkdir -p /tmp/ngx_small_light && \
+    mkdir -p /tmp/nginx_upload_module
 
 # Fetch-unarchive-setup ngx_small_light module
 #
@@ -39,13 +50,22 @@ RUN cd /tmp/ngx_small_light && \
     cd /tmp/ngx_small_light/ngx_small_light-${NGX_SMALL_LIGHT_VERSION} && \
     ./setup
 
-
-# Fetch-unarchive-setup nginx
+# Fetch-unarchive nginx
+#
 RUN cd /tmp/nginx && \
-    wget --no-check-certificate https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar zxvf nginx-${NGINX_VERSION}.tar.gz && \
+    wget --no-check-certificate https://nginx.org/download/nginx-${NGX_VERSION}.tar.gz && tar zxvf nginx-${NGX_VERSION}.tar.gz && \
     wget --no-check-certificate https://ftp.pcre.org/pub/pcre/pcre-${PCRE_VERSION}.tar.gz && tar xzvf pcre-${PCRE_VERSION}.tar.gz && \
-    wget --no-check-certificate http://www.zlib.net/zlib-${ZLIB_VERSION}.tar.gz && tar xzvf zlib-${ZLIB_VERSION}.tar.gz && \
-    cd /tmp/nginx/nginx-${NGINX_VERSION} && \
+    wget --no-check-certificate http://www.zlib.net/zlib-${ZLIB_VERSION}.tar.gz && tar xzvf zlib-${ZLIB_VERSION}.tar.gz
+
+# Fetch-unarchive nginx_upload_module
+#
+RUN cd /tmp/nginx_upload_module && \
+    wget --no-check-certificate -O nginx_upload_module.zip https://codeload.github.com/vkholodkov/nginx-upload-module/zip/${NGX_UPLOAD_MODULE_VERSION} && \
+    unzip nginx_upload_module.zip
+
+# Setup nginx
+#
+RUN cd /tmp/nginx/nginx-${NGX_VERSION} && \
     ./configure --prefix=/usr/share/nginx \
                 --sbin-path=/usr/sbin/nginx \
                 --modules-path=/usr/lib/nginx/modules \
@@ -90,19 +110,47 @@ RUN cd /tmp/nginx && \
                 --with-stream_realip_module \
                 --with-stream_ssl_module \
                 --with-stream_ssl_preread_module \
-                --add-module=/tmp/ngx_small_light/ngx_small_light-${NGX_SMALL_LIGHT_VERSION} && \
+                --add-module=/tmp/ngx_small_light/ngx_small_light-${NGX_SMALL_LIGHT_VERSION} \
+                --add-module=/tmp/nginx_upload_module/nginx-upload-module-${NGX_UPLOAD_MODULE_VERSION} && \
     make && \
     make install
 
-# Nginx -t needs:
+# Nginx -t && nginx_upload_module needs:
 #
-RUN mkdir -p /var/lib/nginx
+RUN mkdir -p /var/lib/nginx && \
+    mkdir -p /tmp/0 && \
+    mkdir -p /tmp/1 && \
+    mkdir -p /tmp/2 && \
+    mkdir -p /tmp/3 && \
+    mkdir -p /tmp/4 && \
+    mkdir -p /tmp/5 && \
+    mkdir -p /tmp/6 && \
+    mkdir -p /tmp/7 && \
+    mkdir -p /tmp/8 && \
+    mkdir -p /tmp/9 && \
+    chown www-data:root /tmp/*
+
+# install n and update node
+#
+RUN npm install -g n && \
+    n ${NODE_VERSION}
+
+# Copy node express app
+#
+#RUN mkdir -p ~/nodeAPPs
+#COPY files/image-server ~/nodeAPPs/image-server
+
+
+# install node packages express and so on
+#
+
 
 
 # Remove all .tar.gz files. We don't need them anymore
 #
 RUN rm -rf /tmp/nginx && \
     rm -rf /tmp/ngx_small_light && \
+    rm -rf /tmp/nginx_upload_module && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -113,6 +161,6 @@ COPY files/nginx.conf   /etc/nginx/nginx.conf
 COPY files/mime.types   /etc/nginx/mime.types
 COPY files/validator.pm /usr/share/nginx/perl/lib/validator.pm
 
-EXPOSE 80 8090
+EXPOSE 80 8080 8090
 
 CMD ["nginx"]

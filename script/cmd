@@ -1,0 +1,25 @@
+CMD [""]
+
+CMD [""]
+
+CMD ["mysql -uroot -p123456"]
+
+CMD ["create database test"]
+
+CMD ["quit"]
+
+1.启动mysql
+
+chown -R mysql:mysql /var/lib/mysql
+
+/etc/init.d/mysql start
+
+2.建个数据库test
+
+3.初始化数据库表
+
+node initial.js
+
+4.启动express服务
+
+node app.js
